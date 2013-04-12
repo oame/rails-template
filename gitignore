@@ -1,0 +1,21 @@
+# Ignore bundler config
+/.bundle
+/vendor/bundle/*
+/bin/*
+Gemfile.lock
+
+# Assets Pipeline
+/public/assets/*
+
+# Ignore the default SQLite database.
+*.sqlite3
+*.db
+
+# Ignore all logfiles and tempfiles.
+/log/*.log
+/tmp
+
+# System configure
+.DS_Store
+Thumbs.db
+*.sublime-*
