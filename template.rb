@@ -7,20 +7,38 @@ config[:install_devise] = yes?("Would you like to install Devise?")
 remove_file 'README.rdoc'
 create_file 'README.md', "# #{app_name}"
 
-## Gemfile
-remove_file 'Gemfile'
-get "#{repo_url}/Gemfile.origin", "Gemfile"
-
-inject_into_file 'Gemfile', after: %{source 'https://rubygems.org'} do
-  "\nruby '#{RUBY_VERSION}'\n"
-end
-
-gsub_file 'Gemfile', 'RAILS_VERSION', Rails::VERSION::STRING
+remove_file 'public/favicon.ico'
+remove_file 'public/robots.txt'
 
 inject_into_file '.gitignore', after: %{/.bundle} do
   "\n/vendor/bundle"
 end
 
+## Gemfile
+remove_file 'Gemfile'
+create_file 'Gemfile' do <<-GEMFILE
+source 'https://rubygems.org'
+
+# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
+gem 'rails', '#{Rails::VERSION::STRING}'
+
+gem 'slim-rails'
+gem 'sass-rails', '~> 4.0.3'
+gem 'uglifier'
+gem 'coffee-rails'
+gem 'jquery-rails'
+gem 'compass-rails'
+gem 'ceaser-easing'
+
+# Gems
+  GEMFILE
+end
+
+inject_into_file 'Gemfile', after: %{source 'https://rubygems.org'} do
+  "\nruby '#{RUBY_VERSION}'\n"
+end
+
+gem 'figaro'
 gem 'devise' if config[:install_devise]
 gem 'cancancan'
 gem 'paranoia'
@@ -30,7 +48,6 @@ gem 'jquery-turbolinks'
 gem 'nprogress-rails'
 gem 'rabl'
 gem 'oj'
-gem 'figaro'
 gem 'action_args'
 gem 'newrelic_rpm'
 gem 'rails_admin'
@@ -91,6 +108,7 @@ run "bundle install --path vendor/bundle --binstubs .bundle/bin --without produc
 
 generate "figaro:install"
 generate "rspec:install"
+gsub_file ".rspec", "--warnings\n", ""
 
 if config[:install_devise]
   generate "model user name:string"
@@ -100,10 +118,16 @@ if config[:install_devise]
 end
 
 ## erb2slim
-run "erb2slim -d app/views"
+run "if which erb2slim > /dev/null; then erb2slim -d app/views; fi"
+
+## js2coffee
+run "if which js2coffee > /dev/null; then (js2coffee app/assets/javascripts/application.js > app/assets/javascripts/application.js.coffee) && rm app/assets/javascripts/application.js; fi"
+
+## sass-convert
+run "if which sass-convert > /dev/null; then (sass-convert -T scss app/assets/stylesheets/application.css > app/assets/stylesheets/application.css.scss) && rm app/assets/stylesheets/application.css; fi"
 
 ## locales/ja.yml
-# get "https://raw.github.com/svenfuchs/rails-i18n/master/rails/locale/ja.yml", "config/locales/ja.yml"
+get "https://raw.github.com/svenfuchs/rails-i18n/master/rails/locale/ja.yml", "config/locales/ja.yml"
 
 ## --skip-bundle
 def run_bundle ; end
